@@ -15,6 +15,12 @@ app.use('/api/jobseekers', jobSeekerRoutes);
 const recruiterRoutes = require('./routes/recruiterRoutes');
 app.use('/api/recruiters', recruiterRoutes);
 
+const employerRoutes = require('./routes/employerRoutes');
+app.use('/api/employers', employerRoutes);
+
+const adminRoutes = require('./routes/adminRoutes');
+app.use('/api/admins', adminRoutes);
+
 console.log("Checking URI:", process.env.MONGODB_URI ? "✅ Found" : "❌ NOT FOUND");
 
 const MONGODB_URI = process.env.MONGODB_URI;
