@@ -21,6 +21,9 @@ app.use('/api/employers', employerRoutes);
 const adminRoutes = require('./routes/adminRoutes');
 app.use('/api/admins', adminRoutes);
 
+const faqRoutes = require('./routes/faqRoutes');
+app.use('/api/faqs', faqRoutes);
+
 console.log("Checking URI:", process.env.MONGODB_URI ? "✅ Found" : "❌ NOT FOUND");
 
 const MONGODB_URI = process.env.MONGODB_URI;
