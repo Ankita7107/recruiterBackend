@@ -72,6 +72,11 @@ const loginEmployer = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // 1. Validate mandatory fields
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please fill all mandatory fields.' });
+    }
+
     // Check for user email
     const employer = await Employer.findOne({ email });
 
