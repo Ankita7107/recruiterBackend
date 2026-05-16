@@ -3,8 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 // Generate JWT
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret123', {
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'secret123', {
     expiresIn: '30d',
   });
 };
@@ -88,7 +88,7 @@ const loginRecruiter = async (req, res) => {
           email: recruiter.email,
           companyName: recruiter.companyName,
           role: 'recruiter',
-          token: generateToken(recruiter._id)
+          token: generateToken(recruiter._id, 'recruiter')
         }
       });
     } else {
