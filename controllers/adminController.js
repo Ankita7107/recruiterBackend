@@ -1,4 +1,7 @@
 const Admin = require('../models/Admin');
+const JobSeeker = require('../models/JobSeeker');
+const Recruiter = require('../models/Recruiter');
+const Employer = require('../models/Employer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -96,7 +99,65 @@ const loginAdmin = async (req, res) => {
   }
 };
 
+// @desc    Get all users across all roles
+// @route   GET /api/admins/users
+// @access  Private/Admin
+const getAllUsers = async (req, res) => {
+  try {
+    const jobSeekers = await JobSeeker.find({}).select('-password');
+    const recruiters = await Recruiter.find({}).select('-password');
+    const employers = await Employer.find({}).select('-password');
+
+    // Combine and add role info
+    const allUsers = [
+      ...jobSeekers.map(u => ({ ...u._doc, role: 'jobseeker' })),
+      ...recruiters.map(u => ({ ...u._doc, role: 'recruiter' })),
+      ...employers.map(u => ({ ...u._doc, role: 'employer' }))
+    ];
+
+    res.json(allUsers);
+  } catch (error) {
+    console.error('Error in getAllUsers:', error);
+    res.status(500).json({ message: 'Server error fetching users.' });
+  }
+};
+
+// @desc    Delete a user
+// @route   DELETE /api/admins/users/:id/:role
+// @access  Private/Admin
+const deleteUser = async (req, res) => {
+  try {
+    const { id, role } = req.params;
+    let deletedUser;
+
+    switch (role) {
+      case 'jobseeker':
+        deletedUser = await JobSeeker.findByIdAndDelete(id);
+        break;
+      case 'recruiter':
+        deletedUser = await Recruiter.findByIdAndDelete(id);
+        break;
+      case 'employer':
+        deletedUser = await Employer.findByIdAndDelete(id);
+        break;
+      default:
+        return res.status(400).json({ message: 'Invalid role provided.' });
+    }
+
+    if (deletedUser) {
+      res.json({ message: 'User deleted successfully.' });
+    } else {
+      res.status(404).json({ message: 'User not found.' });
+    }
+  } catch (error) {
+    console.error('Error in deleteUser:', error);
+    res.status(500).json({ message: 'Server error during deletion.' });
+  }
+};
+
 module.exports = {
   registerAdmin,
-  loginAdmin
+  loginAdmin,
+  getAllUsers,
+  deleteUser
 };
