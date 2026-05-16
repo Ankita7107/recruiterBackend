@@ -32,7 +32,7 @@ const createFAQ = async (req, res) => {
 // @route   PUT /api/faqs/:id
 const updateFAQ = async (req, res) => {
   try {
-    const faq = await FAQ.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const faq = await FAQ.findByIdAndUpdate(req.params.id, req.body, { returnDocument: 'after' });
     if (!faq) return res.status(404).json({ message: 'FAQ not found' });
     res.json(faq);
   } catch (error) {

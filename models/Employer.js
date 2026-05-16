@@ -36,6 +36,10 @@ const employerSchema = new mongoose.Schema({
     type: String,
     trim: true,
     lowercase: true
+  },
+  status: {
+    type: String,
+    default: 'Active'
   }
 }, { timestamps: true });
 

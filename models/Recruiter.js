@@ -31,6 +31,10 @@ const recruiterSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
+  },
+  status: {
+    type: String,
+    default: 'Active'
   }
 }, { timestamps: true });
 
