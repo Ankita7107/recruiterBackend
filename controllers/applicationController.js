@@ -111,7 +111,10 @@ const getEmployerApplications = async (req, res) => {
       .populate('jobId', 'title')
       .sort({ createdAt: -1 });
 
-    res.json({ applications });
+    // Filter out applications where the job has been deleted (jobId populate returns null)
+    const validApplications = applications.filter(a => a.jobId !== null);
+
+    res.json({ applications: validApplications });
   } catch (error) {
     console.error('Error in getEmployerApplications:', error);
     res.status(500).json({ message: 'Server error while fetching applicants.' });
