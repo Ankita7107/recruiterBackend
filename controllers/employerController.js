@@ -104,7 +104,49 @@ const loginEmployer = async (req, res) => {
   }
 };
 
+// @desc    Get logged-in employer's profile
+// @route   GET /api/employers/profile
+// @access  Private (Employer)
+const getProfile = async (req, res) => {
+  try {
+    const employer = await Employer.findById(req.user._id).select('-password');
+    if (!employer) {
+      return res.status(404).json({ message: 'Employer not found.' });
+    }
+    res.json({ employer });
+  } catch (error) {
+    console.error('Error in getProfile:', error);
+    res.status(500).json({ message: 'Server error while fetching profile.' });
+  }
+};
+
+// @desc    Update logged-in employer's profile
+// @route   PUT /api/employers/profile
+// @access  Private (Employer)
+const updateProfile = async (req, res) => {
+  try {
+    const { companyName, industry, website, companySize, address, about, businessEmail, hrPhone } = req.body;
+
+    const updatedEmployer = await Employer.findByIdAndUpdate(
+      req.user._id,
+      { companyName, industry, website, companySize, address, about, businessEmail, hrPhone },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedEmployer) {
+      return res.status(404).json({ message: 'Employer not found.' });
+    }
+
+    res.json({ message: 'Profile updated successfully.', employer: updatedEmployer });
+  } catch (error) {
+    console.error('Error in updateProfile:', error);
+    res.status(500).json({ message: 'Server error while updating profile.' });
+  }
+};
+
 module.exports = {
   registerEmployer,
-  loginEmployer
+  loginEmployer,
+  getProfile,
+  updateProfile
 };

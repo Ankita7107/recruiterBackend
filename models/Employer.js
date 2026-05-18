@@ -37,6 +37,30 @@ const employerSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+  industry: {
+    type: String,
+    trim: true
+  },
+  website: {
+    type: String,
+    trim: true
+  },
+  companySize: {
+    type: String,
+    trim: true
+  },
+  address: {
+    type: String,
+    trim: true
+  },
+  about: {
+    type: String,
+    trim: true
+  },
+  hrPhone: {
+    type: String,
+    trim: true
+  },
   status: {
     type: String,
     default: 'Active'
