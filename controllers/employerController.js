@@ -1,4 +1,5 @@
 const Employer = require('../models/Employer');
+const Job = require('../models/Job');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 

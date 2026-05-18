@@ -1,0 +1,140 @@
+const Application = require('../models/Application');
+const Job = require('../models/Job');
+
+// @desc    Apply for a job
+// @route   POST /api/applications/apply/:jobId
+// @access  Private (JobSeeker only)
+const applyForJob = async (req, res) => {
+  try {
+    if (req.user.role !== 'jobseeker') {
+      return res.status(403).json({ message: 'Access denied. Job Seekers only.' });
+    }
+
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found.' });
+    }
+
+    if (job.status !== 'Open') {
+      return res.status(400).json({ message: 'This job is no longer accepting applications.' });
+    }
+
+    // Check if already applied
+    const alreadyApplied = await Application.findOne({
+      jobId: req.params.jobId,
+      jobSeekerId: req.user._id
+    });
+    if (alreadyApplied) {
+      return res.status(400).json({ message: 'You have already applied for this job.' });
+    }
+
+    const { resumeLink } = req.body;
+
+    const application = await Application.create({
+      jobId: req.params.jobId,
+      jobSeekerId: req.user._id,
+      employerId: job.employer,
+      resumeLink: resumeLink || ''
+    });
+
+    res.status(201).json({
+      message: 'Application submitted successfully.',
+      application
+    });
+  } catch (error) {
+    console.error('Error in applyForJob:', error);
+    res.status(500).json({ message: 'Server error while submitting application.' });
+  }
+};
+
+// @desc    Get all applications submitted by the logged-in JobSeeker
+// @route   GET /api/applications/my-applications
+// @access  Private (JobSeeker only)
+const getMyApplications = async (req, res) => {
+  try {
+    if (req.user.role !== 'jobseeker') {
+      return res.status(403).json({ message: 'Access denied. Job Seekers only.' });
+    }
+
+    const applications = await Application.find({ jobSeekerId: req.user._id })
+      .populate('jobId', 'title category jobType location salaryRange company')
+      .populate('employerId', 'companyName')
+      .sort({ createdAt: -1 });
+
+    res.json({ applications });
+  } catch (error) {
+    console.error('Error in getMyApplications:', error);
+    res.status(500).json({ message: 'Server error while fetching applications.' });
+  }
+};
+
+// @desc    Get all applicants for a specific job
+// @route   GET /api/applications/job/:jobId
+// @access  Private (Employer only)
+const getJobApplications = async (req, res) => {
+  try {
+    if (req.user.role !== 'employer') {
+      return res.status(403).json({ message: 'Access denied. Employers only.' });
+    }
+
+    // Make sure the employer owns this job
+    const job = await Job.findById(req.params.jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found.' });
+    }
+    if (job.employer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied. You do not own this job.' });
+    }
+
+    const applications = await Application.find({ jobId: req.params.jobId })
+      .populate('jobSeekerId', 'firstName lastName email mobile')
+      .sort({ createdAt: -1 });
+
+    res.json({ applications });
+  } catch (error) {
+    console.error('Error in getJobApplications:', error);
+    res.status(500).json({ message: 'Server error while fetching applicants.' });
+  }
+};
+
+// @desc    Update application status (Shortlist, Reject, etc.)
+// @route   PUT /api/applications/:id/status
+// @access  Private (Employer only)
+const updateApplicationStatus = async (req, res) => {
+  try {
+    if (req.user.role !== 'employer') {
+      return res.status(403).json({ message: 'Access denied. Employers only.' });
+    }
+
+    const { status } = req.body;
+    const validStatuses = ['Applied', 'Under Review', 'Shortlisted', 'Interview', 'Rejected', 'Closed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+    }
+
+    const application = await Application.findById(req.params.id);
+    if (!application) {
+      return res.status(404).json({ message: 'Application not found.' });
+    }
+
+    // Ensure the employer owns the job this application belongs to
+    if (application.employerId.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied. You do not own this application.' });
+    }
+
+    application.status = status;
+    await application.save();
+
+    res.json({ message: `Application status updated to '${status}'.`, application });
+  } catch (error) {
+    console.error('Error in updateApplicationStatus:', error);
+    res.status(500).json({ message: 'Server error while updating status.' });
+  }
+};
+
+module.exports = {
+  applyForJob,
+  getMyApplications,
+  getJobApplications,
+  updateApplicationStatus
+};

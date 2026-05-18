@@ -1,0 +1,54 @@
+const mongoose = require('mongoose');
+
+const jobSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  category: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  jobType: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  experienceLevel: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  location: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  salaryRange: {
+    type: String,
+    trim: true
+  },
+  deadline: {
+    type: Date
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  skills: [{
+    type: String
+  }],
+  employer: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Employer',
+    required: true
+  },
+  status: {
+    type: String,
+    default: 'Open'
+  }
+}, { timestamps: true });
+
+module.exports = mongoose.model('Job', jobSchema);
