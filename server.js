@@ -33,6 +33,9 @@ app.use('/api/jobs', jobRoutes);
 const applicationRoutes = require('./routes/applicationRoutes');
 app.use('/api/applications', applicationRoutes);
 
+const masterDataRoutes = require('./routes/masterDataRoutes');
+app.use('/api/master', masterDataRoutes);
+
 console.log("Checking URI:", process.env.MONGODB_URI ? "✅ Found" : "❌ NOT FOUND");
 
 const MONGODB_URI = process.env.MONGODB_URI;
