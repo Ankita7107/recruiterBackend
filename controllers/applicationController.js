@@ -1,5 +1,6 @@
 const Application = require('../models/Application');
 const Job = require('../models/Job');
+const JobSeeker = require('../models/JobSeeker');
 
 // @desc    Apply for a job
 // @route   POST /api/applications/apply/:jobId
@@ -30,11 +31,18 @@ const applyForJob = async (req, res) => {
 
     const { resumeLink } = req.body;
 
+    // Auto-fetch resume from JobSeeker profile if not provided in request
+    let finalResumeLink = resumeLink || '';
+    if (!finalResumeLink) {
+      const seeker = await JobSeeker.findById(req.user._id).select('resumeLink');
+      finalResumeLink = seeker?.resumeLink || '';
+    }
+
     const application = await Application.create({
       jobId: req.params.jobId,
       jobSeekerId: req.user._id,
       employerId: job.employer,
-      resumeLink: resumeLink || ''
+      resumeLink: finalResumeLink
     });
 
     res.status(201).json({
