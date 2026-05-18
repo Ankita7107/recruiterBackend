@@ -3,6 +3,8 @@ const JobSeeker = require('../models/JobSeeker');
 const Recruiter = require('../models/Recruiter');
 const Employer = require('../models/Employer');
 const Job = require('../models/Job');
+const Application = require('../models/Application');
+const City = require('../models/City');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -237,6 +239,80 @@ const rejectJob = async (req, res) => {
   }
 };
 
+// @desc    Get dashboard metrics & registrations overview (Admin only)
+// @route   GET /api/admins/dashboard-overview
+// @access  Private/Admin
+const getDashboardOverview = async (req, res) => {
+  try {
+    const jobSeekerCount = await JobSeeker.countDocuments({});
+    const employerCount = await Employer.countDocuments({});
+    const recruiterCount = await Recruiter.countDocuments({});
+    const totalUsers = jobSeekerCount + employerCount + recruiterCount;
+
+    const activeJobs = await Job.countDocuments({ status: { $in: ['Open', 'Active'] } });
+
+    // Dynamic placement calculations
+    const shortlistedCount = await Application.countDocuments({ status: 'Shortlisted' });
+    const interviewCount = await Application.countDocuments({ status: 'Interview' });
+    const placementsCount = shortlistedCount + interviewCount;
+
+    // Premium dynamic revenue simulation
+    const baseRevenue = 250000;
+    const dynamicRevenue = baseRevenue + (employerCount * 5000) + (recruiterCount * 3000);
+
+    // Fetch Recent Registrations
+    const recentJobSeekers = await JobSeeker.find({}).sort({ createdAt: -1 }).limit(3);
+    const recentEmployers = await Employer.find({}).sort({ createdAt: -1 }).limit(3);
+    const recentRecruiters = await Recruiter.find({}).sort({ createdAt: -1 }).limit(3);
+
+    const mergedUsers = [
+      ...recentJobSeekers.map(u => ({
+        name: `${u.firstName} ${u.lastName}`,
+        role: 'Job Seeker',
+        city: u.city || 'N/A',
+        createdAt: u.createdAt,
+        status: u.status || 'Active'
+      })),
+      ...recentEmployers.map(u => ({
+        name: u.companyName || `${u.firstName} ${u.lastName}`,
+        role: 'Employer',
+        city: u.city || 'N/A',
+        createdAt: u.createdAt,
+        status: u.status || 'Active'
+      })),
+      ...recentRecruiters.map(u => ({
+        name: `${u.firstName} ${u.lastName} (${u.companyName})`,
+        role: 'Recruiter',
+        city: 'N/A',
+        createdAt: u.createdAt,
+        status: u.status || 'Active'
+      }))
+    ];
+
+    const sortedRecentUsers = mergedUsers
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 4);
+
+    // Fetch Master Cities List
+    const dbCities = await City.find({}).sort({ name: 1 });
+    const cityNames = dbCities.map(c => c.name);
+
+    res.json({
+      stats: {
+        totalUsers,
+        activeJobs,
+        revenue: dynamicRevenue,
+        placements: placementsCount
+      },
+      recentUsers: sortedRecentUsers,
+      cities: cityNames.length > 0 ? cityNames : ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Pune"]
+    });
+  } catch (error) {
+    console.error('Error in getDashboardOverview:', error);
+    res.status(500).json({ message: 'Server error fetching dashboard overview.' });
+  }
+};
+
 module.exports = {
   registerAdmin,
   loginAdmin,
@@ -245,5 +321,6 @@ module.exports = {
   getAdminJobs,
   getPendingJobs,
   approveJob,
-  rejectJob
+  rejectJob,
+  getDashboardOverview
 };

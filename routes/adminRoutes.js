@@ -8,7 +8,8 @@ const {
   getAdminJobs,
   getPendingJobs,
   approveJob,
-  rejectJob
+  rejectJob,
+  getDashboardOverview
 } = require('../controllers/adminController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
@@ -46,6 +47,9 @@ router.put('/jobs/:id/approve', protect, adminOnly, approveJob);
 // @route   PUT /api/admins/jobs/:id/reject
 // @desc    Reject job post
 // @access  Private/Admin
-router.put('/jobs/:id/reject', protect, adminOnly, rejectJob);
+// @route   GET /api/admins/dashboard-overview
+// @desc    Get dashboard metrics & registrations overview
+// @access  Private/Admin
+router.get('/dashboard-overview', protect, adminOnly, getDashboardOverview);
 
 module.exports = router;
