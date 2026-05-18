@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { registerEmployer, loginEmployer, getProfile, updateProfile } = require('../controllers/employerController');
+const { registerEmployer, loginEmployer, getProfile, updateProfile, uploadProfileImage } = require('../controllers/employerController');
 const { protect } = require('../middleware/authMiddleware');
+const profileImageUpload = require('../middleware/profileImageUploadMiddleware');
 
 // @route   POST /api/employers/register
 // @desc    Register a new employer
@@ -22,5 +23,10 @@ router.get('/profile', protect, getProfile);
 // @desc    Update logged-in employer's profile
 // @access  Private (Employer)
 router.put('/profile', protect, updateProfile);
+
+// @route   POST /api/employers/upload-profile-image
+// @desc    Upload profile image (logo) for employer
+// @access  Private (Employer)
+router.post('/upload-profile-image', protect, profileImageUpload.single('profileImage'), uploadProfileImage);
 
 module.exports = router;

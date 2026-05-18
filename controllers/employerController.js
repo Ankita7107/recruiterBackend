@@ -125,11 +125,11 @@ const getProfile = async (req, res) => {
 // @access  Private (Employer)
 const updateProfile = async (req, res) => {
   try {
-    const { companyName, industry, website, companySize, address, about, businessEmail, hrPhone } = req.body;
+    const { companyName, industry, website, companySize, address, about, businessEmail, hrPhone, profileImage } = req.body;
 
     const updatedEmployer = await Employer.findByIdAndUpdate(
       req.user._id,
-      { companyName, industry, website, companySize, address, about, businessEmail, hrPhone },
+      { companyName, industry, website, companySize, address, about, businessEmail, hrPhone, profileImage },
       { new: true, runValidators: true }
     ).select('-password');
 
@@ -144,9 +144,44 @@ const updateProfile = async (req, res) => {
   }
 };
 
+// @desc    Upload profile image (logo) for employer
+// @route   POST /api/employers/upload-profile-image
+// @access  Private (Employer)
+const uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload an image file.' });
+    }
+
+    // Construct image URL path
+    const profileImageUrl = `${req.protocol}://${req.get('host')}/uploads/profile-images/${req.file.filename}`;
+
+    // Update DB
+    const employer = await Employer.findByIdAndUpdate(
+      req.user._id,
+      { profileImage: profileImageUrl },
+      { new: true }
+    ).select('-password');
+
+    if (!employer) {
+      return res.status(404).json({ message: 'Employer not found.' });
+    }
+
+    res.json({
+      message: 'Profile image uploaded successfully.',
+      profileImage: profileImageUrl,
+      employer
+    });
+  } catch (error) {
+    console.error('Error in uploadProfileImage:', error);
+    res.status(500).json({ message: 'Server error while uploading profile image.' });
+  }
+};
+
 module.exports = {
   registerEmployer,
   loginEmployer,
   getProfile,
-  updateProfile
+  updateProfile,
+  uploadProfileImage
 };
