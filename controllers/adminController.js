@@ -2,6 +2,7 @@ const Admin = require('../models/Admin');
 const JobSeeker = require('../models/JobSeeker');
 const Recruiter = require('../models/Recruiter');
 const Employer = require('../models/Employer');
+const Job = require('../models/Job');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -155,9 +156,94 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// @desc    Get all jobs & stats for admin moderation
+// @route   GET /api/admins/jobs
+// @access  Private/Admin
+const getAdminJobs = async (req, res) => {
+  try {
+    const jobs = await Job.find({})
+      .populate('employer', 'companyName firstName lastName email')
+      .sort({ createdAt: -1 });
+
+    // Calculate dynamic stats
+    const activeCount = jobs.filter(j => j.status === 'Open' || j.status === 'Active').length;
+    const pendingCount = jobs.filter(j => j.status === 'Pending').length;
+    const totalCount = jobs.length;
+
+    res.json({
+      stats: {
+        activeCount,
+        pendingCount,
+        totalCount
+      },
+      jobs
+    });
+  } catch (error) {
+    console.error('Error in getAdminJobs:', error);
+    res.status(500).json({ message: 'Server error while fetching jobs for admin.' });
+  }
+};
+
+// @desc    Get all pending jobs in verification queue
+// @route   GET /api/admins/jobs/pending
+// @access  Private/Admin
+const getPendingJobs = async (req, res) => {
+  try {
+    const jobs = await Job.find({ status: 'Pending' })
+      .populate('employer', 'companyName firstName lastName email verified')
+      .sort({ createdAt: -1 });
+
+    res.json({ jobs });
+  } catch (error) {
+    console.error('Error in getPendingJobs:', error);
+    res.status(500).json({ message: 'Server error while fetching pending jobs.' });
+  }
+};
+
+// @desc    Approve a pending job post
+// @route   PUT /api/admins/jobs/:id/approve
+// @access  Private/Admin
+const approveJob = async (req, res) => {
+  try {
+    const job = await Job.findById(req.params.id);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found.' });
+    }
+
+    job.status = 'Open'; // Set status to 'Open' (matches our backend public filter)
+    await job.save();
+
+    res.json({ message: 'Job post approved successfully.', job });
+  } catch (error) {
+    console.error('Error in approveJob:', error);
+    res.status(500).json({ message: 'Server error during job approval.' });
+  }
+};
+
+// @desc    Reject a pending job post (Deletes job completely from DB)
+// @route   PUT /api/admins/jobs/:id/reject
+// @access  Private/Admin
+const rejectJob = async (req, res) => {
+  try {
+    const job = await Job.findByIdAndDelete(req.params.id);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found.' });
+    }
+
+    res.json({ message: 'Job post rejected and deleted successfully.' });
+  } catch (error) {
+    console.error('Error in rejectJob:', error);
+    res.status(500).json({ message: 'Server error during job rejection.' });
+  }
+};
+
 module.exports = {
   registerAdmin,
   loginAdmin,
   getAllUsers,
-  deleteUser
+  deleteUser,
+  getAdminJobs,
+  getPendingJobs,
+  approveJob,
+  rejectJob
 };
