@@ -1,8 +1,16 @@
 const express = require('express');
 const router = express.Router();
-const { registerJobSeeker, loginJobSeeker, getProfile, updateProfile, uploadResume } = require('../controllers/jobSeekerController');
+const { 
+  registerJobSeeker, 
+  loginJobSeeker, 
+  getProfile, 
+  updateProfile, 
+  uploadResume,
+  uploadProfileImage
+} = require('../controllers/jobSeekerController');
 const { protect } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
+const profileImageUpload = require('../middleware/profileImageUploadMiddleware');
 
 // @route   POST /api/jobseekers/register
 // @desc    Register a new job seeker
@@ -28,5 +36,10 @@ router.put('/profile', protect, updateProfile);
 // @desc    Upload PDF resume
 // @access  Private (JobSeeker)
 router.post('/upload-resume', protect, upload.single('resume'), uploadResume);
+
+// @route   POST /api/jobseekers/upload-profile-image
+// @desc    Upload profile image (JPG, PNG, GIF)
+// @access  Private (JobSeeker)
+router.post('/upload-profile-image', protect, profileImageUpload.single('profileImage'), uploadProfileImage);
 
 module.exports = router;

@@ -60,6 +60,10 @@ const jobSeekerSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  profileImage: {
+    type: String,
+    trim: true
+  },
   status: {
     type: String,
     default: 'Active'

@@ -118,11 +118,11 @@ const getProfile = async (req, res) => {
 // @access  Private (JobSeeker)
 const updateProfile = async (req, res) => {
   try {
-    const { city, skills, experience, education, resumeLink, mobile } = req.body;
+    const { city, skills, experience, education, resumeLink, profileImage, mobile } = req.body;
 
     const updatedJobSeeker = await JobSeeker.findByIdAndUpdate(
       req.user._id,
-      { city, skills, experience, education, resumeLink, mobile },
+      { city, skills, experience, education, resumeLink, profileImage, mobile },
       { new: true, runValidators: true }
     ).select('-password');
 
@@ -167,10 +167,41 @@ const uploadResume = async (req, res) => {
   }
 };
 
+// @desc    Upload profile image (JPG, JPEG, PNG, GIF)
+// @route   POST /api/jobseekers/upload-profile-image
+// @access  Private (JobSeeker)
+const uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image uploaded. Please upload a valid image (JPG, PNG, GIF).' });
+    }
+
+    // Build static URL path
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/profile-images/${req.file.filename}`;
+
+    // Update candidate profile
+    const updatedJobSeeker = await JobSeeker.findByIdAndUpdate(
+      req.user._id,
+      { profileImage: imageUrl },
+      { new: true }
+    ).select('-password');
+
+    res.json({
+      message: 'Profile image uploaded successfully.',
+      profileImage: imageUrl,
+      jobSeeker: updatedJobSeeker
+    });
+  } catch (error) {
+    console.error('Error in uploadProfileImage:', error);
+    res.status(500).json({ message: 'Server error while uploading profile image.' });
+  }
+};
+
 module.exports = {
   registerJobSeeker,
   loginJobSeeker,
   getProfile,
   updateProfile,
-  uploadResume
+  uploadResume,
+  uploadProfileImage
 };
