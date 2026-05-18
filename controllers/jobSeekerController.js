@@ -97,7 +97,80 @@ const loginJobSeeker = async (req, res) => {
   }
 };
 
+// @desc    Get logged-in job seeker's profile
+// @route   GET /api/jobseekers/profile
+// @access  Private (JobSeeker)
+const getProfile = async (req, res) => {
+  try {
+    const jobSeeker = await JobSeeker.findById(req.user._id).select('-password');
+    if (!jobSeeker) {
+      return res.status(404).json({ message: 'Job seeker not found.' });
+    }
+    res.json({ jobSeeker });
+  } catch (error) {
+    console.error('Error in getProfile:', error);
+    res.status(500).json({ message: 'Server error while fetching profile.' });
+  }
+};
+
+// @desc    Update logged-in job seeker's profile
+// @route   PUT /api/jobseekers/profile
+// @access  Private (JobSeeker)
+const updateProfile = async (req, res) => {
+  try {
+    const { city, skills, experience, education, resumeLink, mobile } = req.body;
+
+    const updatedJobSeeker = await JobSeeker.findByIdAndUpdate(
+      req.user._id,
+      { city, skills, experience, education, resumeLink, mobile },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!updatedJobSeeker) {
+      return res.status(404).json({ message: 'Job seeker not found.' });
+    }
+
+    res.json({ message: 'Profile updated successfully.', jobSeeker: updatedJobSeeker });
+  } catch (error) {
+    console.error('Error in updateProfile:', error);
+    res.status(500).json({ message: 'Server error while updating profile.' });
+  }
+};
+
+// @desc    Upload resume PDF
+// @route   POST /api/jobseekers/upload-resume
+// @access  Private (JobSeeker)
+const uploadResume = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No file uploaded. Please upload a PDF.' });
+    }
+
+    // Build the accessible URL for the uploaded file
+    const resumeUrl = `${req.protocol}://${req.get('host')}/uploads/resumes/${req.file.filename}`;
+
+    // Save the resume URL in the JobSeeker's profile
+    const updatedJobSeeker = await JobSeeker.findByIdAndUpdate(
+      req.user._id,
+      { resumeLink: resumeUrl },
+      { new: true }
+    ).select('-password');
+
+    res.json({
+      message: 'Resume uploaded successfully.',
+      resumeLink: resumeUrl,
+      jobSeeker: updatedJobSeeker
+    });
+  } catch (error) {
+    console.error('Error in uploadResume:', error);
+    res.status(500).json({ message: 'Server error while uploading resume.' });
+  }
+};
+
 module.exports = {
   registerJobSeeker,
-  loginJobSeeker
+  loginJobSeeker,
+  getProfile,
+  updateProfile,
+  uploadResume
 };

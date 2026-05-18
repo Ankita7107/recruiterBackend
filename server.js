@@ -8,6 +8,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve uploaded files (resumes, etc.) as static files
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 const jobSeekerRoutes = require('./routes/jobSeekerRoutes');
 app.use('/api/jobseekers', jobSeekerRoutes);

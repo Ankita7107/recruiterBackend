@@ -97,6 +97,27 @@ const getJobApplications = async (req, res) => {
   }
 };
 
+// @desc    Get all applications for the logged-in Employer (across all jobs)
+// @route   GET /api/applications/employer
+// @access  Private (Employer only)
+const getEmployerApplications = async (req, res) => {
+  try {
+    if (req.user.role !== 'employer') {
+      return res.status(403).json({ message: 'Access denied. Employers only.' });
+    }
+
+    const applications = await Application.find({ employerId: req.user._id })
+      .populate('jobSeekerId', 'firstName lastName email mobile city skills experience education resumeLink')
+      .populate('jobId', 'title')
+      .sort({ createdAt: -1 });
+
+    res.json({ applications });
+  } catch (error) {
+    console.error('Error in getEmployerApplications:', error);
+    res.status(500).json({ message: 'Server error while fetching applicants.' });
+  }
+};
+
 // @desc    Update application status (Shortlist, Reject, etc.)
 // @route   PUT /api/applications/:id/status
 // @access  Private (Employer only)
@@ -136,5 +157,6 @@ module.exports = {
   applyForJob,
   getMyApplications,
   getJobApplications,
+  getEmployerApplications,
   updateApplicationStatus
 };

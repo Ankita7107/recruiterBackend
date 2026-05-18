@@ -4,6 +4,7 @@ const {
   applyForJob,
   getMyApplications,
   getJobApplications,
+  getEmployerApplications,
   updateApplicationStatus
 } = require('../controllers/applicationController');
 const { protect } = require('../middleware/authMiddleware');
@@ -19,9 +20,14 @@ router.post('/apply/:jobId', protect, applyForJob);
 router.get('/my-applications', protect, getMyApplications);
 
 // @route   GET /api/applications/job/:jobId
-// @desc    Get all applicants for a specific job (for employer)
+// @desc    Get all applicants for a specific job
 // @access  Private (Employer)
 router.get('/job/:jobId', protect, getJobApplications);
+
+// @route   GET /api/applications/employer
+// @desc    Get all applicants for the logged-in employer (all jobs)
+// @access  Private (Employer)
+router.get('/employer', protect, getEmployerApplications);
 
 // @route   PUT /api/applications/:id/status
 // @desc    Update application status

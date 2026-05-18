@@ -27,6 +27,39 @@ const jobSeekerSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  city: {
+    type: String,
+    trim: true
+  },
+  skills: {
+    type: [String],
+    default: []
+  },
+  experience: {
+    type: [
+      {
+        role: String,
+        company: String,
+        period: String,
+        desc: String
+      }
+    ],
+    default: []
+  },
+  education: {
+    type: [
+      {
+        degree: String,
+        university: String,
+        year: String
+      }
+    ],
+    default: []
+  },
+  resumeLink: {
+    type: String,
+    trim: true
+  },
   status: {
     type: String,
     default: 'Active'
