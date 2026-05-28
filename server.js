@@ -51,6 +51,12 @@ app.use('/api/resumes', resumeRoutes);
 const aboutRoutes = require('./routes/aboutRoutes');
 app.use('/api/about', aboutRoutes);
 
+const servicesRoutes = require('./routes/servicesRoutes');
+app.use('/api/services', servicesRoutes);
+
+const pricingRoutes = require('./routes/pricingRoutes');
+app.use('/api/pricing', pricingRoutes);
+
 console.log("Checking URI:", process.env.MONGODB_URI ? "✅ Found" : "❌ NOT FOUND");
 
 const MONGODB_URI = process.env.MONGODB_URI;
