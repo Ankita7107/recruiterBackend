@@ -8,6 +8,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Prevent response caching for all API calls
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  next();
+});
+
 // Serve uploaded files (resumes, etc.) as static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -41,6 +47,9 @@ app.use('/api/enquiries', enquiryRoutes);
 
 const resumeRoutes = require('./routes/resumeRoutes');
 app.use('/api/resumes', resumeRoutes);
+
+const aboutRoutes = require('./routes/aboutRoutes');
+app.use('/api/about', aboutRoutes);
 
 console.log("Checking URI:", process.env.MONGODB_URI ? "✅ Found" : "❌ NOT FOUND");
 
