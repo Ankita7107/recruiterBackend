@@ -1,4 +1,5 @@
 const JobSeeker = require('../models/JobSeeker');
+const Job = require('../models/Job');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -197,11 +198,101 @@ const uploadProfileImage = async (req, res) => {
   }
 };
 
+// @desc    Bookmark/Save a job
+// @route   POST /api/jobseekers/saved-jobs/:jobId
+// @access  Private (JobSeeker only)
+const saveJob = async (req, res) => {
+  try {
+    if (req.user.role !== 'jobseeker') {
+      return res.status(403).json({ message: 'Access denied. Job Seekers only.' });
+    }
+
+    const { jobId } = req.params;
+
+    // Check if the job exists
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found.' });
+    }
+
+    // Find candidate profile
+    const seeker = await JobSeeker.findById(req.user._id);
+
+    // Initial check to avoid duplicates
+    if (seeker.savedJobs.includes(jobId)) {
+      return res.status(400).json({ message: 'Job already saved.' });
+    }
+
+    seeker.savedJobs.push(jobId);
+    await seeker.save();
+
+    res.json({ message: 'Job saved successfully.', savedJobs: seeker.savedJobs });
+  } catch (error) {
+    console.error('Error in saveJob:', error);
+    res.status(500).json({ message: 'Server error while saving job.' });
+  }
+};
+
+// @desc    Unsave/Remove bookmarked job
+// @route   DELETE /api/jobseekers/saved-jobs/:jobId
+// @access  Private (JobSeeker only)
+const unsaveJob = async (req, res) => {
+  try {
+    if (req.user.role !== 'jobseeker') {
+      return res.status(403).json({ message: 'Access denied. Job Seekers only.' });
+    }
+
+    const { jobId } = req.params;
+
+    const seeker = await JobSeeker.findById(req.user._id);
+
+    seeker.savedJobs = seeker.savedJobs.filter(id => id.toString() !== jobId);
+    await seeker.save();
+
+    res.json({ message: 'Job removed from bookmarks.', savedJobs: seeker.savedJobs });
+  } catch (error) {
+    console.error('Error in unsaveJob:', error);
+    res.status(500).json({ message: 'Server error while removing bookmarked job.' });
+  }
+};
+
+// @desc    Get all bookmarked jobs
+// @route   GET /api/jobseekers/saved-jobs
+// @access  Private (JobSeeker only)
+const getSavedJobs = async (req, res) => {
+  try {
+    if (req.user.role !== 'jobseeker') {
+      return res.status(403).json({ message: 'Access denied. Job Seekers only.' });
+    }
+
+    const seeker = await JobSeeker.findById(req.user._id)
+      .populate({
+        path: 'savedJobs',
+        populate: {
+          path: 'employer',
+          select: 'companyName profileImage website industry website about'
+        }
+      });
+
+    if (!seeker) {
+      return res.status(404).json({ message: 'Job seeker not found.' });
+    }
+
+    res.json({ savedJobs: seeker.savedJobs || [] });
+  } catch (error) {
+    console.error('Error in getSavedJobs:', error);
+    res.status(500).json({ message: 'Server error while fetching saved jobs.' });
+  }
+};
+
 module.exports = {
   registerJobSeeker,
   loginJobSeeker,
   getProfile,
   updateProfile,
   uploadResume,
-  uploadProfileImage
+  uploadProfileImage,
+  saveJob,
+  unsaveJob,
+  getSavedJobs
 };

@@ -67,7 +67,13 @@ const jobSeekerSchema = new mongoose.Schema({
   status: {
     type: String,
     default: 'Active'
-  }
+  },
+  savedJobs: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Job'
+    }
+  ]
 }, { timestamps: true });
 
 module.exports = mongoose.model('JobSeeker', jobSeekerSchema);
