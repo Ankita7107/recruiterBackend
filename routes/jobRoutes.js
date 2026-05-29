@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAllJobs, getJobById, postJob, getEmployerJobs } = require('../controllers/jobController');
+const { getAllJobs, getJobById, postJob, getEmployerJobs, updateJob } = require('../controllers/jobController');
 const { protect } = require('../middleware/authMiddleware');
 
 // @route   GET /api/jobs
@@ -22,5 +22,10 @@ router.post('/', protect, postJob);
 // @desc    Get job by ID
 // @access  Public
 router.get('/:id', getJobById);
+
+// @route   PUT /api/jobs/:id
+// @desc    Update a job post
+// @access  Private (Employer)
+router.put('/:id', protect, updateJob);
 
 module.exports = router;

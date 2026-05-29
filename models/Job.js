@@ -40,6 +40,13 @@ const jobSchema = new mongoose.Schema({
   skills: [{
     type: String
   }],
+  openings: {
+    type: Number,
+    default: 1
+  },
+  responsibilities: [{
+    type: String
+  }],
   employer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Employer',

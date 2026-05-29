@@ -50,7 +50,8 @@ const postJob = async (req, res) => {
 
     const { 
       title, category, jobType, experienceLevel, 
-      location, salaryRange, deadline, description, skills 
+      location, salaryRange, deadline, description, skills,
+      openings, responsibilities
     } = req.body;
 
     // Validate mandatory fields
@@ -68,6 +69,8 @@ const postJob = async (req, res) => {
       deadline,
       description,
       skills,
+      openings,
+      responsibilities,
       employer: req.user._id
     });
 
@@ -99,9 +102,61 @@ const getEmployerJobs = async (req, res) => {
   }
 };
 
+// @desc    Update a job post
+// @route   PUT /api/jobs/:id
+// @access  Private (Employer only)
+const updateJob = async (req, res) => {
+  try {
+    if (req.user.role !== 'employer') {
+      return res.status(403).json({ message: 'Access denied. Employers only.' });
+    }
+
+    let job = await Job.findById(req.params.id);
+    if (!job) {
+      return res.status(404).json({ message: 'Job not found.' });
+    }
+
+    // Ensure the employer owns the job
+    if (job.employer.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied. You do not own this job.' });
+    }
+
+    const { 
+      title, category, jobType, experienceLevel, 
+      location, salaryRange, deadline, description, skills, status,
+      openings, responsibilities
+    } = req.body;
+
+    // Update job fields if they are provided
+    if (title !== undefined) job.title = title;
+    if (category !== undefined) job.category = category;
+    if (jobType !== undefined) job.jobType = jobType;
+    if (experienceLevel !== undefined) job.experienceLevel = experienceLevel;
+    if (location !== undefined) job.location = location;
+    if (salaryRange !== undefined) job.salaryRange = salaryRange;
+    if (deadline !== undefined) job.deadline = deadline;
+    if (description !== undefined) job.description = description;
+    if (skills !== undefined) job.skills = skills;
+    if (status !== undefined) job.status = status;
+    if (openings !== undefined) job.openings = openings;
+    if (responsibilities !== undefined) job.responsibilities = responsibilities;
+
+    await job.save();
+
+    res.json({
+      message: 'Job updated successfully.',
+      job
+    });
+  } catch (error) {
+    console.error('Error in updateJob:', error);
+    res.status(500).json({ message: 'Server error while updating job.' });
+  }
+};
+
 module.exports = {
   getAllJobs,
   getJobById,
   postJob,
-  getEmployerJobs
+  getEmployerJobs,
+  updateJob
 };
