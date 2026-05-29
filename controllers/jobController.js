@@ -51,7 +51,7 @@ const postJob = async (req, res) => {
     const { 
       title, category, jobType, experienceLevel, 
       location, salaryRange, deadline, description, skills,
-      openings, responsibilities
+      openings
     } = req.body;
 
     // Validate mandatory fields
@@ -70,7 +70,6 @@ const postJob = async (req, res) => {
       description,
       skills,
       openings,
-      responsibilities,
       employer: req.user._id
     });
 
@@ -124,7 +123,7 @@ const updateJob = async (req, res) => {
     const { 
       title, category, jobType, experienceLevel, 
       location, salaryRange, deadline, description, skills, status,
-      openings, responsibilities
+      openings
     } = req.body;
 
     // Update job fields if they are provided
@@ -139,7 +138,6 @@ const updateJob = async (req, res) => {
     if (skills !== undefined) job.skills = skills;
     if (status !== undefined) job.status = status;
     if (openings !== undefined) job.openings = openings;
-    if (responsibilities !== undefined) job.responsibilities = responsibilities;
 
     await job.save();
 
