@@ -62,7 +62,48 @@ console.log("Checking URI:", process.env.MONGODB_URI ? "✅ Found" : "❌ NOT FO
 const MONGODB_URI = process.env.MONGODB_URI;
 
 mongoose.connect(MONGODB_URI)
-  .then(() => console.log("✅ MongoDB Connected (recruiterdb) Successfully!"))
+  .then(async () => {
+    console.log("✅ MongoDB Connected (recruiterdb) Successfully!");
+    
+    // Automatically seed recruiter leads from actual database candidates & jobs if empty
+    try {
+      const Application = require('./models/Application');
+      const JobSeeker = require('./models/JobSeeker');
+      const Job = require('./models/Job');
+      
+      const count = await Application.countDocuments({});
+      if (count === 0) {
+        console.log("🌱 Database holds no candidate applications. Constructing dynamic recruiter leads...");
+        const candidates = await JobSeeker.find({}).limit(5);
+        const jobs = await Job.find({}).limit(5);
+        
+        if (candidates.length > 0 && jobs.length > 0) {
+          const createdApps = [];
+          for (let i = 0; i < Math.min(candidates.length, jobs.length); i++) {
+            const candidate = candidates[i];
+            const job = jobs[i];
+            const app = await Application.create({
+              jobId: job._id,
+              jobSeekerId: candidate._id,
+              employerId: job.employer,
+              status: 'Applied',
+              recruiterStatus: i % 2 === 0 ? 'Interested' : 'Callback',
+              recruiterNotes: i % 2 === 0 ? 'Verified profile. Active candidate.' : 'Wants to callback after 5 PM.',
+              callTime: i % 2 === 0 ? '11:15 AM' : '03:45 PM'
+            });
+            createdApps.push(app);
+          }
+          console.log(`✅ Successfully seeded ${createdApps.length} dynamic applications (leads) for the recruiter dashboard!`);
+        } else {
+          console.log("⚠️ No candidates or jobs found in database to link. Please seed candidates/jobs first.");
+        }
+      } else {
+        console.log(`📊 recruiterdb already contains ${count} dynamic applications. Skipping auto-link.`);
+      }
+    } catch (err) {
+      console.error("❌ Recruiter auto-linking failed:", err);
+    }
+  })
   .catch(err => {
     console.error("❌ MongoDB Connection Error:");
     console.error(err);

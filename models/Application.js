@@ -23,6 +23,19 @@ const applicationSchema = new mongoose.Schema({
     type: String,
     enum: ['Applied', 'Under Review', 'Shortlisted', 'Interview', 'Rejected', 'Closed'],
     default: 'Applied'
+  },
+  recruiterStatus: {
+    type: String,
+    enum: ['Pending', 'Interested', 'Callback', 'Not Answered', 'Not Interested'],
+    default: 'Pending'
+  },
+  recruiterNotes: {
+    type: String,
+    default: ''
+  },
+  callTime: {
+    type: String,
+    default: ''
   }
 }, { timestamps: true });
 
