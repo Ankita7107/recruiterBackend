@@ -65,6 +65,10 @@ const employerSchema = new mongoose.Schema({
     type: String,
     default: 'Active'
   },
+  verified: {
+    type: Boolean,
+    default: false
+  },
   profileImage: {
     type: String,
     default: ''

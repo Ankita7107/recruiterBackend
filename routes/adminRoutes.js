@@ -9,7 +9,8 @@ const {
   getPendingJobs,
   approveJob,
   rejectJob,
-  getDashboardOverview
+  getDashboardOverview,
+  toggleVerifyEmployer
 } = require('../controllers/adminController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
@@ -29,6 +30,11 @@ router.get('/users', protect, adminOnly, getAllUsers);
 // @access  Private/Admin
 router.delete('/users/:id/:role', protect, adminOnly, deleteUser);
 
+// @route   PUT /api/admins/users/:id/toggle-verify
+// @desc    Toggle verified status for an employer
+// @access  Private/Admin
+router.put('/users/:id/toggle-verify', protect, adminOnly, toggleVerifyEmployer);
+
 // @route   GET /api/admins/jobs
 // @desc    Get all jobs and statistics for admin moderation
 // @access  Private/Admin
@@ -47,6 +53,7 @@ router.put('/jobs/:id/approve', protect, adminOnly, approveJob);
 // @route   PUT /api/admins/jobs/:id/reject
 // @desc    Reject job post
 // @access  Private/Admin
+router.put('/jobs/:id/reject', protect, adminOnly, rejectJob);
 // @route   GET /api/admins/dashboard-overview
 // @desc    Get dashboard metrics & registrations overview
 // @access  Private/Admin

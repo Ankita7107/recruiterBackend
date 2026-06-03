@@ -115,7 +115,7 @@ const getAllUsers = async (req, res) => {
     const allUsers = [
       ...jobSeekers.map(u => ({ ...u._doc, role: 'jobseeker' })),
       ...recruiters.map(u => ({ ...u._doc, role: 'recruiter' })),
-      ...employers.map(u => ({ ...u._doc, role: 'employer' }))
+      ...employers.map(u => ({ ...u._doc, role: 'employer', verified: u.verified }))
     ];
 
     res.json(allUsers);
@@ -313,6 +313,33 @@ const getDashboardOverview = async (req, res) => {
   }
 };
 
+// @desc    Toggle verified status for an employer
+// @route   PUT /api/admins/users/:id/toggle-verify
+// @access  Private/Admin
+const toggleVerifyEmployer = async (req, res) => {
+  try {
+    const employer = await Employer.findById(req.params.id);
+    if (!employer) {
+      return res.status(404).json({ message: 'Employer not found.' });
+    }
+
+    employer.verified = !employer.verified;
+    await employer.save();
+
+    res.json({ 
+      message: `Employer verification status updated to ${employer.verified ? 'Verified' : 'Unverified'}.`, 
+      employer: {
+        _id: employer._id,
+        companyName: employer.companyName,
+        verified: employer.verified
+      }
+    });
+  } catch (error) {
+    console.error('Error in toggleVerifyEmployer:', error);
+    res.status(500).json({ message: 'Server error while toggling employer verification.' });
+  }
+};
+
 module.exports = {
   registerAdmin,
   loginAdmin,
@@ -322,5 +349,6 @@ module.exports = {
   getPendingJobs,
   approveJob,
   rejectJob,
-  getDashboardOverview
+  getDashboardOverview,
+  toggleVerifyEmployer
 };
