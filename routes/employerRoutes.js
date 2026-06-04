@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { registerEmployer, loginEmployer, getProfile, updateProfile, uploadProfileImage } = require('../controllers/employerController');
+const { registerEmployer, loginEmployer, getProfile, updateProfile, uploadProfileImage, getPublicStats } = require('../controllers/employerController');
 const { protect } = require('../middleware/authMiddleware');
 const profileImageUpload = require('../middleware/profileImageUploadMiddleware');
 
@@ -13,6 +13,11 @@ router.post('/register', registerEmployer);
 // @desc    Login an employer
 // @access  Public
 router.post('/login', loginEmployer);
+
+// @route   GET /api/employers/public-stats
+// @desc    Get global hiring statistics with base offset (Public)
+// @access  Public
+router.get('/public-stats', getPublicStats);
 
 // @route   GET /api/employers/profile
 // @desc    Get logged-in employer's profile

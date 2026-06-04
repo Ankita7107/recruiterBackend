@@ -1,5 +1,6 @@
 const Employer = require('../models/Employer');
 const Job = require('../models/Job');
+const Application = require('../models/Application');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -178,10 +179,32 @@ const uploadProfileImage = async (req, res) => {
   }
 };
 
+// @desc    Get global hiring statistics (Public)
+// @route   GET /api/employers/public-stats
+// @access  Public
+const getPublicStats = async (req, res) => {
+  try {
+    const totalAppsCount = await Application.countDocuments({});
+    const shortlistedCount = await Application.countDocuments({ status: 'Shortlisted' });
+    const interviewCount = await Application.countDocuments({ status: 'Interview' });
+
+    res.json({
+      totalApplications: totalAppsCount,
+      shortlisted: shortlistedCount,
+      interviews: interviewCount,
+      offers: shortlistedCount
+    });
+  } catch (error) {
+    console.error('Error in getPublicStats:', error);
+    res.status(500).json({ message: 'Server error while fetching stats.' });
+  }
+};
+
 module.exports = {
   registerEmployer,
   loginEmployer,
   getProfile,
   updateProfile,
-  uploadProfileImage
+  uploadProfileImage,
+  getPublicStats
 };
