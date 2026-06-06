@@ -128,6 +128,57 @@ const updateLead = async (req, res) => {
 
     await application.save();
 
+    // Trigger notification for JobSeeker
+    try {
+      const Notification = require('../models/Notification');
+      const targetJob = await Job.findById(application.jobId);
+      if (targetJob) {
+        let textMsg = '';
+        if (status === 'Interested') {
+          textMsg = `Your application for '${targetJob.title}' has been shortlisted by the recruiter after call screening.`;
+        } else if (status === 'Not Interested') {
+          textMsg = `Your application status for '${targetJob.title}' has been updated to 'Rejected' after call screening.`;
+        } else {
+          textMsg = `Your application status for '${targetJob.title}' is now under review after call screening.`;
+        }
+
+        await Notification.create({
+          recipient: application.jobSeekerId,
+          recipientModel: 'JobSeeker',
+          text: textMsg
+        });
+      }
+    } catch (notifError) {
+      console.error('Error creating jobseeker notification from lead update:', notifError);
+    }
+
+    // Trigger notification for Employer
+    try {
+      const Notification = require('../models/Notification');
+      const targetJob = await Job.findById(application.jobId);
+      if (targetJob) {
+        const seeker = await JobSeeker.findById(application.jobSeekerId);
+        const seekerName = seeker ? `${seeker.firstName} ${seeker.lastName}` : 'Candidate';
+        
+        let textMsg = '';
+        if (status === 'Interested') {
+          textMsg = `Recruiter call screening complete: ${seekerName} is interested in '${targetJob.title}' (Shortlisted).`;
+        } else if (status === 'Not Interested') {
+          textMsg = `Recruiter call screening complete: ${seekerName} is not interested in '${targetJob.title}' (Rejected).`;
+        } else {
+          textMsg = `Recruiter call screening complete: ${seekerName} is under review for '${targetJob.title}'.`;
+        }
+
+        await Notification.create({
+          recipient: application.employerId,
+          recipientModel: 'Employer',
+          text: textMsg
+        });
+      }
+    } catch (notifError) {
+      console.error('Error creating employer notification from lead update:', notifError);
+    }
+
     res.json({
       message: 'Outreach log successfully recorded in database.',
       lead: {

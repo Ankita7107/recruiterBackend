@@ -51,6 +51,9 @@ app.use('/api/resumes', resumeRoutes);
 const aboutRoutes = require('./routes/aboutRoutes');
 app.use('/api/about', aboutRoutes);
 
+const notificationRoutes = require('./routes/notificationRoutes');
+app.use('/api/notifications', notificationRoutes);
+
 const servicesRoutes = require('./routes/servicesRoutes');
 app.use('/api/services', servicesRoutes);
 

@@ -1,6 +1,7 @@
 const Application = require('../models/Application');
 const Job = require('../models/Job');
 const JobSeeker = require('../models/JobSeeker');
+const Notification = require('../models/Notification');
 
 // @desc    Apply for a job
 // @route   POST /api/applications/apply/:jobId
@@ -44,6 +45,34 @@ const applyForJob = async (req, res) => {
       employerId: job.employer,
       resumeLink: finalResumeLink
     });
+
+    // Trigger notification for Employer
+    try {
+      await Notification.create({
+        recipient: job.employer,
+        recipientModel: 'Employer',
+        text: `New application received from ${req.user.firstName} ${req.user.lastName} for the job: ${job.title}`
+      });
+    } catch (notifError) {
+      console.error('Error creating apply notification:', notifError);
+    }
+
+    // Trigger notification for Recruiter(s)
+    try {
+      const Recruiter = require('../models/Recruiter');
+      const recruiters = await Recruiter.find({});
+      const notifications = recruiters.map(rec => ({
+        recipient: rec._id,
+        recipientModel: 'Recruiter',
+        text: `New lead: ${req.user.firstName} ${req.user.lastName} applied for '${job.title}'. Please perform tele-screening.`
+      }));
+      
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
+    } catch (notifError) {
+      console.error('Error creating recruiter lead notification:', notifError);
+    }
 
     res.status(201).json({
       message: 'Application submitted successfully.',
@@ -156,6 +185,20 @@ const updateApplicationStatus = async (req, res) => {
 
     application.status = status;
     await application.save();
+
+    // Trigger notification for JobSeeker
+    try {
+      const job = await Job.findById(application.jobId);
+      if (job) {
+        await Notification.create({
+          recipient: application.jobSeekerId,
+          recipientModel: 'JobSeeker',
+          text: `Your application status for '${job.title}' has been updated to '${status}'.`
+        });
+      }
+    } catch (notifError) {
+      console.error('Error creating status update notification:', notifError);
+    }
 
     res.json({ message: `Application status updated to '${status}'.`, application });
   } catch (error) {

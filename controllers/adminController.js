@@ -4,6 +4,7 @@ const Recruiter = require('../models/Recruiter');
 const Employer = require('../models/Employer');
 const Job = require('../models/Job');
 const Application = require('../models/Application');
+const Notification = require('../models/Notification');
 const City = require('../models/City');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -215,6 +216,17 @@ const approveJob = async (req, res) => {
     job.status = 'Open'; // Set status to 'Open' (matches our backend public filter)
     await job.save();
 
+    // Trigger notification for Employer
+    try {
+      await Notification.create({
+        recipient: job.employer,
+        recipientModel: 'Employer',
+        text: `Your job posting '${job.title}' has been approved by the Admin and is now live.`
+      });
+    } catch (notifError) {
+      console.error('Error creating job approval notification:', notifError);
+    }
+
     res.json({ message: 'Job post approved successfully.', job });
   } catch (error) {
     console.error('Error in approveJob:', error);
@@ -227,10 +239,23 @@ const approveJob = async (req, res) => {
 // @access  Private/Admin
 const rejectJob = async (req, res) => {
   try {
-    const job = await Job.findByIdAndDelete(req.params.id);
+    const job = await Job.findById(req.params.id);
     if (!job) {
       return res.status(404).json({ message: 'Job not found.' });
     }
+
+    // Trigger notification for Employer
+    try {
+      await Notification.create({
+        recipient: job.employer,
+        recipientModel: 'Employer',
+        text: `Your job posting '${job.title}' has been rejected by the Admin.`
+      });
+    } catch (notifError) {
+      console.error('Error creating job rejection notification:', notifError);
+    }
+
+    await Job.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Job post rejected and deleted successfully.' });
   } catch (error) {

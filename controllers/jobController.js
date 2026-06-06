@@ -73,6 +73,26 @@ const postJob = async (req, res) => {
       employer: req.user._id
     });
 
+    // Trigger notification for Admin(s)
+    try {
+      const Admin = require('../models/Admin');
+      const Notification = require('../models/Notification');
+      const admins = await Admin.find({});
+      const companyName = req.user.companyName || `${req.user.firstName} ${req.user.lastName}`;
+      
+      const notifications = admins.map(admin => ({
+        recipient: admin._id,
+        recipientModel: 'Admin',
+        text: `New job posting '${job.title}' submitted by ${companyName} requires approval.`
+      }));
+      
+      if (notifications.length > 0) {
+        await Notification.insertMany(notifications);
+      }
+    } catch (notifError) {
+      console.error('Error creating admin job post notification:', notifError);
+    }
+
     res.status(201).json({
       message: 'Job posted successfully.',
       job
