@@ -95,7 +95,7 @@ const getMyApplications = async (req, res) => {
 
     const applications = await Application.find({ jobSeekerId: req.user._id })
       .populate('jobId', 'title category jobType location salaryRange company')
-      .populate('employerId', 'companyName')
+      .populate('employerId', 'companyName businessEmail hrPhone address industry email mobile')
       .sort({ createdAt: -1 });
 
     res.json({ applications });

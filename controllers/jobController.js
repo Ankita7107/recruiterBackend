@@ -9,7 +9,7 @@ const getAllJobs = async (req, res) => {
     const filter = { status: 'Open' };
     
     const jobs = await Job.find(filter)
-      .populate('employer', 'companyName') // Get company name from Employer
+      .populate('employer', 'companyName businessEmail hrPhone website address email mobile') // Get company name and contact details from Employer
       .sort({ createdAt: -1 }); // Newest first
 
     res.json({ jobs });
@@ -25,7 +25,7 @@ const getAllJobs = async (req, res) => {
 const getJobById = async (req, res) => {
   try {
     const job = await Job.findById(req.params.id)
-      .populate('employer', 'companyName firstName lastName email');
+      .populate('employer', 'companyName firstName lastName email mobile businessEmail hrPhone website address');
 
     if (!job) {
       return res.status(404).json({ message: 'Job not found.' });
