@@ -146,19 +146,40 @@ const getProfile = async (req, res) => {
 // @access  Private (JobSeeker)
 const updateProfile = async (req, res) => {
   try {
-    const { city, skills, experience, education, resumeLink, profileImage, mobile } = req.body;
-
-    const updatedJobSeeker = await JobSeeker.findByIdAndUpdate(
-      req.user._id,
-      { city, skills, experience, education, resumeLink, profileImage, mobile },
-      { new: true, runValidators: true }
-    ).select('-password');
-
-    if (!updatedJobSeeker) {
+    const jobSeeker = await JobSeeker.findById(req.user._id);
+    if (!jobSeeker) {
       return res.status(404).json({ message: 'Job seeker not found.' });
     }
 
-    res.json({ message: 'Profile updated successfully.', jobSeeker: updatedJobSeeker });
+    const { city, skills, experience, education, resumeLink, profileImage, mobile, password } = req.body;
+
+    // Validate password if provided
+    if (password) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({ 
+          message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).' 
+        });
+      }
+      const salt = await bcrypt.genSalt(10);
+      jobSeeker.password = await bcrypt.hash(password, salt);
+    }
+
+    if (city !== undefined) jobSeeker.city = city;
+    if (skills !== undefined) jobSeeker.skills = skills;
+    if (experience !== undefined) jobSeeker.experience = experience;
+    if (education !== undefined) jobSeeker.education = education;
+    if (resumeLink !== undefined) jobSeeker.resumeLink = resumeLink;
+    if (profileImage !== undefined) jobSeeker.profileImage = profileImage;
+    if (mobile !== undefined) jobSeeker.mobile = mobile;
+
+    const updatedJobSeeker = await jobSeeker.save();
+    
+    // Remove password before returning
+    const seekerObj = updatedJobSeeker.toObject();
+    delete seekerObj.password;
+
+    res.json({ message: 'Profile updated successfully.', jobSeeker: seekerObj });
   } catch (error) {
     console.error('Error in updateProfile:', error);
     res.status(500).json({ message: 'Server error while updating profile.' });

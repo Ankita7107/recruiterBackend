@@ -160,19 +160,42 @@ const getProfile = async (req, res) => {
 // @access  Private (Employer)
 const updateProfile = async (req, res) => {
   try {
-    const { companyName, industry, website, companySize, address, about, businessEmail, hrPhone, profileImage } = req.body;
-
-    const updatedEmployer = await Employer.findByIdAndUpdate(
-      req.user._id,
-      { companyName, industry, website, companySize, address, about, businessEmail, hrPhone, profileImage },
-      { new: true, runValidators: true }
-    ).select('-password');
-
-    if (!updatedEmployer) {
+    const employer = await Employer.findById(req.user._id);
+    if (!employer) {
       return res.status(404).json({ message: 'Employer not found.' });
     }
 
-    res.json({ message: 'Profile updated successfully.', employer: updatedEmployer });
+    const { companyName, industry, website, companySize, address, about, businessEmail, hrPhone, profileImage, password } = req.body;
+
+    // Validate password if provided
+    if (password) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({ 
+          message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).' 
+        });
+      }
+      const salt = await bcrypt.genSalt(10);
+      employer.password = await bcrypt.hash(password, salt);
+    }
+
+    if (companyName !== undefined) employer.companyName = companyName;
+    if (industry !== undefined) employer.industry = industry;
+    if (website !== undefined) employer.website = website;
+    if (companySize !== undefined) employer.companySize = companySize;
+    if (address !== undefined) employer.address = address;
+    if (about !== undefined) employer.about = about;
+    if (businessEmail !== undefined) employer.businessEmail = businessEmail;
+    if (hrPhone !== undefined) employer.hrPhone = hrPhone;
+    if (profileImage !== undefined) employer.profileImage = profileImage;
+
+    const updatedEmployer = await employer.save();
+    
+    // Remove password before returning
+    const empObj = updatedEmployer.toObject();
+    delete empObj.password;
+
+    res.json({ message: 'Profile updated successfully.', employer: empObj });
   } catch (error) {
     console.error('Error in updateProfile:', error);
     res.status(500).json({ message: 'Server error while updating profile.' });
