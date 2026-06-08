@@ -10,9 +10,13 @@ const {
   approveJob,
   rejectJob,
   getDashboardOverview,
-  toggleVerifyEmployer
+  toggleVerifyEmployer,
+  getAdminProfile,
+  updateAdminProfile,
+  uploadProfileImage
 } = require('../controllers/adminController');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
+const profileImageUpload = require('../middleware/profileImageUploadMiddleware');
 
 // @route   POST /api/admins/register
 router.post('/register', registerAdmin);
@@ -54,9 +58,25 @@ router.put('/jobs/:id/approve', protect, adminOnly, approveJob);
 // @desc    Reject job post
 // @access  Private/Admin
 router.put('/jobs/:id/reject', protect, adminOnly, rejectJob);
+
 // @route   GET /api/admins/dashboard-overview
 // @desc    Get dashboard metrics & registrations overview
 // @access  Private/Admin
 router.get('/dashboard-overview', protect, adminOnly, getDashboardOverview);
+
+// @route   GET /api/admins/profile
+// @desc    Get logged-in admin's profile
+// @access  Private/Admin
+router.get('/profile', protect, adminOnly, getAdminProfile);
+
+// @route   PUT /api/admins/profile
+// @desc    Update admin profile
+// @access  Private/Admin
+router.put('/profile', protect, adminOnly, updateAdminProfile);
+
+// @route   POST /api/admins/upload-profile-image
+// @desc    Upload profile image (JPG, JPEG, PNG, GIF)
+// @access  Private/Admin
+router.post('/upload-profile-image', protect, adminOnly, profileImageUpload.single('profileImage'), uploadProfileImage);
 
 module.exports = router;

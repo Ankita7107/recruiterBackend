@@ -365,6 +365,104 @@ const toggleVerifyEmployer = async (req, res) => {
   }
 };
 
+// @desc    Get logged-in admin's profile
+// @route   GET /api/admins/profile
+// @access  Private/Admin
+const getAdminProfile = async (req, res) => {
+  try {
+    res.json({ admin: req.user });
+  } catch (error) {
+    console.error('Error in getAdminProfile:', error);
+    res.status(500).json({ message: 'Server error fetching admin profile.' });
+  }
+};
+
+// @desc    Update admin profile
+// @route   PUT /api/admins/profile
+// @access  Private/Admin
+const updateAdminProfile = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.user._id);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found.' });
+    }
+
+    const { firstName, lastName, email, password, profileImage, mobile } = req.body;
+
+    if (firstName) admin.firstName = firstName;
+    if (lastName) admin.lastName = lastName;
+    
+    if (email && email.toLowerCase() !== admin.email) {
+      const emailExists = await Admin.findOne({ email: email.toLowerCase() });
+      if (emailExists) {
+        return res.status(400).json({ message: 'Email is already in use.' });
+      }
+      admin.email = email.toLowerCase();
+    }
+
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      admin.password = await bcrypt.hash(password, salt);
+    }
+
+    if (profileImage !== undefined) {
+      admin.profileImage = profileImage;
+    }
+
+    if (mobile !== undefined) {
+      admin.mobile = mobile;
+    }
+
+    const updatedAdmin = await admin.save();
+    
+    res.json({
+      message: 'Profile updated successfully.',
+      admin: {
+        _id: updatedAdmin._id,
+        firstName: updatedAdmin.firstName,
+        lastName: updatedAdmin.lastName,
+        email: updatedAdmin.email,
+        profileImage: updatedAdmin.profileImage,
+        mobile: updatedAdmin.mobile,
+        role: 'admin'
+      }
+    });
+  } catch (error) {
+    console.error('Error in updateAdminProfile:', error);
+    res.status(500).json({ message: 'Server error updating admin profile.' });
+  }
+};
+
+// @desc    Upload profile image (JPG, JPEG, PNG, GIF)
+// @route   POST /api/admins/upload-profile-image
+// @access  Private/Admin
+const uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No image uploaded. Please upload a valid image (JPG, PNG, GIF).' });
+    }
+
+    // Build static URL path
+    const imageUrl = `${req.protocol}://${req.get('host')}/uploads/profile-images/${req.file.filename}`;
+
+    // Update admin profile image
+    const updatedAdmin = await Admin.findByIdAndUpdate(
+      req.user._id,
+      { profileImage: imageUrl },
+      { new: true }
+    ).select('-password');
+
+    res.json({
+      message: 'Profile image uploaded successfully.',
+      profileImage: imageUrl,
+      admin: updatedAdmin
+    });
+  } catch (error) {
+    console.error('Error in uploadProfileImage:', error);
+    res.status(500).json({ message: 'Server error while uploading profile image.' });
+  }
+};
+
 module.exports = {
   registerAdmin,
   loginAdmin,
@@ -375,5 +473,8 @@ module.exports = {
   approveJob,
   rejectJob,
   getDashboardOverview,
-  toggleVerifyEmployer
+  toggleVerifyEmployer,
+  getAdminProfile,
+  updateAdminProfile,
+  uploadProfileImage
 };
