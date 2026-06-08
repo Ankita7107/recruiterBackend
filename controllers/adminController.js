@@ -389,15 +389,49 @@ const updateAdminProfile = async (req, res) => {
 
     const { firstName, lastName, email, password, profileImage, mobile } = req.body;
 
-    if (firstName) admin.firstName = firstName;
-    if (lastName) admin.lastName = lastName;
+    // Validations
+    const nameRegex = /^[a-zA-Z\s]{2,30}$/;
+    if (firstName && !nameRegex.test(firstName.trim())) {
+      return res.status(400).json({ message: 'First name must contain only letters and be 2 to 30 characters long.' });
+    }
+    if (lastName && !nameRegex.test(lastName.trim())) {
+      return res.status(400).json({ message: 'Last name must contain only letters and be 2 to 30 characters long.' });
+    }
+
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ message: 'Please provide a valid email address.' });
+      }
+    }
+
+    let cleanedMobile = mobile;
+    if (mobile) {
+      cleanedMobile = mobile.replace(/[\s\-()]/g, "").replace(/^(\+91|91|0)/, "");
+      const mobileRegex = /^[6-9]\d{9}$/;
+      if (!mobileRegex.test(cleanedMobile)) {
+        return res.status(400).json({ message: 'Please provide a valid 10-digit mobile number starting with 6, 7, 8, or 9.' });
+      }
+    }
+
+    if (password) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({ 
+          message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).' 
+        });
+      }
+    }
+
+    if (firstName) admin.firstName = firstName.trim();
+    if (lastName) admin.lastName = lastName.trim();
     
-    if (email && email.toLowerCase() !== admin.email) {
-      const emailExists = await Admin.findOne({ email: email.toLowerCase() });
+    if (email && email.trim().toLowerCase() !== admin.email) {
+      const emailExists = await Admin.findOne({ email: email.trim().toLowerCase() });
       if (emailExists) {
         return res.status(400).json({ message: 'Email is already in use.' });
       }
-      admin.email = email.toLowerCase();
+      admin.email = email.trim().toLowerCase();
     }
 
     if (password) {
@@ -410,7 +444,7 @@ const updateAdminProfile = async (req, res) => {
     }
 
     if (mobile !== undefined) {
-      admin.mobile = mobile;
+      admin.mobile = cleanedMobile;
     }
 
     const updatedAdmin = await admin.save();

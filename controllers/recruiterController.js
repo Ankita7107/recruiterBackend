@@ -21,27 +21,58 @@ const registerRecruiter = async (req, res) => {
       return res.status(400).json({ message: 'Please provide all required fields.' });
     }
 
-    // 2. Check if recruiter already exists
-    const recruiterExists = await Recruiter.findOne({ email });
+    // 2. Format / Validation checks
+    const nameRegex = /^[a-zA-Z\s]{2,30}$/;
+    if (!nameRegex.test(firstName.trim())) {
+      return res.status(400).json({ message: 'First name must contain only letters and be 2 to 30 characters long.' });
+    }
+    if (!nameRegex.test(lastName.trim())) {
+      return res.status(400).json({ message: 'Last name must contain only letters and be 2 to 30 characters long.' });
+    }
+
+    if (companyName.trim().length < 2) {
+      return res.status(400).json({ message: 'Company name must be at least 2 characters long.' });
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return res.status(400).json({ message: 'Please provide a valid email address.' });
+    }
+
+    const cleanedMobile = mobile.replace(/[\s\-()]/g, "").replace(/^(\+91|91|0)/, "");
+    const mobileRegex = /^[6-9]\d{9}$/;
+    if (!mobileRegex.test(cleanedMobile)) {
+      return res.status(400).json({ message: 'Please provide a valid 10-digit mobile number starting with 6, 7, 8, or 9.' });
+    }
+
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ 
+        message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).' 
+      });
+    }
+
+    // 3. Check if recruiter already exists
+    const recruiterExists = await Recruiter.findOne({ email: email.toLowerCase() });
     if (recruiterExists) {
       return res.status(400).json({ message: 'Recruiter with this email already exists.' });
     }
 
-    // 3. Hash the password
+    // 4. Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 4. Create new recruiter
+    // 5. Create new recruiter
     const recruiter = await Recruiter.create({
-      firstName,
-      lastName,
-      email,
-      mobile,
-      companyName,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim().toLowerCase(),
+      mobile: cleanedMobile,
+      companyName: companyName.trim(),
       password: hashedPassword
     });
 
-    // 5. Send success response
+    // 6. Send success response
     if (recruiter) {
       res.status(201).json({
         message: 'Recruiter registered successfully.',
