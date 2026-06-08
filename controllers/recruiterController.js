@@ -131,7 +131,154 @@ const loginRecruiter = async (req, res) => {
   }
 };
 
+// @desc    Get recruiter profile
+// @route   GET /api/recruiters/profile
+// @access  Private
+const getRecruiterProfile = async (req, res) => {
+  try {
+    const recruiter = await Recruiter.findById(req.user._id).select('-password');
+    if (!recruiter) {
+      return res.status(404).json({ message: 'Recruiter not found.' });
+    }
+    res.json({ recruiter });
+  } catch (error) {
+    console.error('Error in getRecruiterProfile:', error);
+    res.status(500).json({ message: 'Server error while fetching profile.' });
+  }
+};
+
+// @desc    Update recruiter profile
+// @route   PUT /api/recruiters/profile
+// @access  Private
+const updateRecruiterProfile = async (req, res) => {
+  try {
+    const recruiter = await Recruiter.findById(req.user._id);
+    if (!recruiter) {
+      return res.status(404).json({ message: 'Recruiter not found.' });
+    }
+
+    const { firstName, lastName, email, mobile, companyName, password, profileImage } = req.body;
+
+    // Validations
+    const nameRegex = /^[a-zA-Z\s]{2,30}$/;
+    if (firstName && !nameRegex.test(firstName.trim())) {
+      return res.status(400).json({ message: 'First name must contain only letters and be 2 to 30 characters long.' });
+    }
+    if (lastName && !nameRegex.test(lastName.trim())) {
+      return res.status(400).json({ message: 'Last name must contain only letters and be 2 to 30 characters long.' });
+    }
+
+    if (companyName && companyName.trim().length < 2) {
+      return res.status(400).json({ message: 'Company name must be at least 2 characters long.' });
+    }
+
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        return res.status(400).json({ message: 'Please provide a valid email address.' });
+      }
+    }
+
+    let cleanedMobile = mobile;
+    if (mobile) {
+      cleanedMobile = mobile.replace(/[\s\-()]/g, "").replace(/^(\+91|91|0)/, "");
+      const mobileRegex = /^[6-9]\d{9}$/;
+      if (!mobileRegex.test(cleanedMobile)) {
+        return res.status(400).json({ message: 'Please provide a valid 10-digit mobile number starting with 6, 7, 8, or 9.' });
+      }
+    }
+
+    if (password) {
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({ 
+          message: 'Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&#).' 
+        });
+      }
+    }
+
+    if (firstName) recruiter.firstName = firstName.trim();
+    if (lastName) recruiter.lastName = lastName.trim();
+    if (companyName) recruiter.companyName = companyName.trim();
+    
+    if (email && email.trim().toLowerCase() !== recruiter.email) {
+      const emailExists = await Recruiter.findOne({ email: email.trim().toLowerCase() });
+      if (emailExists) {
+        return res.status(400).json({ message: 'Email is already in use.' });
+      }
+      recruiter.email = email.trim().toLowerCase();
+    }
+
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      recruiter.password = await bcrypt.hash(password, salt);
+    }
+
+    if (profileImage !== undefined) {
+      recruiter.profileImage = profileImage;
+    }
+
+    if (mobile !== undefined) {
+      recruiter.mobile = cleanedMobile;
+    }
+
+    const updatedRecruiter = await recruiter.save();
+    
+    res.json({
+      message: 'Profile updated successfully.',
+      recruiter: {
+        _id: updatedRecruiter._id,
+        firstName: updatedRecruiter.firstName,
+        lastName: updatedRecruiter.lastName,
+        email: updatedRecruiter.email,
+        mobile: updatedRecruiter.mobile,
+        companyName: updatedRecruiter.companyName,
+        profileImage: updatedRecruiter.profileImage,
+        role: 'recruiter'
+      }
+    });
+  } catch (error) {
+    console.error('Error in updateRecruiterProfile:', error);
+    res.status(500).json({ message: 'Server error updating profile.' });
+  }
+};
+
+// @desc    Upload profile image for recruiter
+// @route   POST /api/recruiters/upload-profile-image
+// @access  Private
+const uploadProfileImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Please upload an image file.' });
+    }
+
+    const profileImageUrl = `${req.protocol}://${req.get('host')}/uploads/profile-images/${req.file.filename}`;
+
+    const recruiter = await Recruiter.findByIdAndUpdate(
+      req.user._id,
+      { profileImage: profileImageUrl },
+      { new: true }
+    ).select('-password');
+
+    if (!recruiter) {
+      return res.status(404).json({ message: 'Recruiter not found.' });
+    }
+
+    res.json({
+      message: 'Profile image uploaded successfully.',
+      profileImage: profileImageUrl,
+      recruiter
+    });
+  } catch (error) {
+    console.error('Error in uploadProfileImage:', error);
+    res.status(500).json({ message: 'Server error while uploading profile image.' });
+  }
+};
+
 module.exports = {
   registerRecruiter,
-  loginRecruiter
+  loginRecruiter,
+  getRecruiterProfile,
+  updateRecruiterProfile,
+  uploadProfileImage
 };

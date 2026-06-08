@@ -35,6 +35,10 @@ const recruiterSchema = new mongoose.Schema({
   status: {
     type: String,
     default: 'Active'
+  },
+  profileImage: {
+    type: String,
+    default: ''
   }
 }, { timestamps: true });
 

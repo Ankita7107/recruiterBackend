@@ -1,8 +1,15 @@
 const express = require('express');
 const router = express.Router();
-const { registerRecruiter, loginRecruiter } = require('../controllers/recruiterController');
+const { 
+  registerRecruiter, 
+  loginRecruiter, 
+  getRecruiterProfile, 
+  updateRecruiterProfile, 
+  uploadProfileImage 
+} = require('../controllers/recruiterController');
 const { getLeads, createLead, updateLead, seedDefaultLeads } = require('../controllers/leadController');
 const { protect } = require('../middleware/authMiddleware');
+const profileImageUpload = require('../middleware/profileImageUploadMiddleware');
 
 // Auth routes
 // @route   POST /api/recruiters/register
@@ -10,6 +17,15 @@ router.post('/register', registerRecruiter);
 
 // @route   POST /api/recruiters/login
 router.post('/login', loginRecruiter);
+
+// @route   GET /api/recruiters/profile
+router.get('/profile', protect, getRecruiterProfile);
+
+// @route   PUT /api/recruiters/profile
+router.put('/profile', protect, updateRecruiterProfile);
+
+// @route   POST /api/recruiters/upload-profile-image
+router.post('/upload-profile-image', protect, profileImageUpload.single('profileImage'), uploadProfileImage);
 
 // Lead CRM routes
 // @route   GET /api/recruiters/leads/seed
