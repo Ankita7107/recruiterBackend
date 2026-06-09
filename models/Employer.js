@@ -37,6 +37,10 @@ const employerSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
+  city: {
+    type: String,
+    trim: true
+  },
   industry: {
     type: String,
     trim: true

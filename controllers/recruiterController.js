@@ -14,7 +14,7 @@ const generateToken = (id, role) => {
 // @access  Public
 const registerRecruiter = async (req, res) => {
   try {
-    const { firstName, lastName, email, mobile, password, companyName } = req.body;
+    const { firstName, lastName, email, mobile, password, companyName, city } = req.body;
 
     // 1. Validate required fields
     if (!firstName || !lastName || !email || !mobile || !password || !companyName) {
@@ -69,7 +69,8 @@ const registerRecruiter = async (req, res) => {
       email: email.trim().toLowerCase(),
       mobile: cleanedMobile,
       companyName: companyName.trim(),
-      password: hashedPassword
+      password: hashedPassword,
+      city: city || ''
     });
 
     // 6. Send success response
@@ -82,6 +83,7 @@ const registerRecruiter = async (req, res) => {
           lastName: recruiter.lastName,
           email: recruiter.email,
           companyName: recruiter.companyName,
+          city: recruiter.city,
           role: 'recruiter'
         }
       });
@@ -118,6 +120,7 @@ const loginRecruiter = async (req, res) => {
           lastName: recruiter.lastName,
           email: recruiter.email,
           companyName: recruiter.companyName,
+          city: recruiter.city,
           role: 'recruiter',
           token: generateToken(recruiter._id, 'recruiter')
         }
@@ -157,7 +160,7 @@ const updateRecruiterProfile = async (req, res) => {
       return res.status(404).json({ message: 'Recruiter not found.' });
     }
 
-    const { firstName, lastName, email, mobile, companyName, password, profileImage } = req.body;
+    const { firstName, lastName, email, mobile, companyName, city, password, profileImage } = req.body;
 
     // Validations
     const nameRegex = /^[a-zA-Z\s]{2,30}$/;
@@ -200,6 +203,7 @@ const updateRecruiterProfile = async (req, res) => {
     if (firstName) recruiter.firstName = firstName.trim();
     if (lastName) recruiter.lastName = lastName.trim();
     if (companyName) recruiter.companyName = companyName.trim();
+    if (city !== undefined) recruiter.city = city;
     
     if (email && email.trim().toLowerCase() !== recruiter.email) {
       const emailExists = await Recruiter.findOne({ email: email.trim().toLowerCase() });
@@ -233,6 +237,7 @@ const updateRecruiterProfile = async (req, res) => {
         email: updatedRecruiter.email,
         mobile: updatedRecruiter.mobile,
         companyName: updatedRecruiter.companyName,
+        city: updatedRecruiter.city,
         profileImage: updatedRecruiter.profileImage,
         role: 'recruiter'
       }

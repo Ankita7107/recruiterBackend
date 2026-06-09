@@ -308,7 +308,7 @@ const getDashboardOverview = async (req, res) => {
       ...recentRecruiters.map(u => ({
         name: `${u.firstName} ${u.lastName} (${u.companyName})`,
         role: 'Recruiter',
-        city: 'N/A',
+        city: u.city || 'N/A',
         createdAt: u.createdAt,
         status: u.status || 'Active'
       }))

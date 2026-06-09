@@ -32,6 +32,10 @@ const recruiterSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  city: {
+    type: String,
+    trim: true
+  },
   status: {
     type: String,
     default: 'Active'

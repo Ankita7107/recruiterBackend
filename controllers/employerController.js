@@ -16,7 +16,7 @@ const generateToken = (id, role) => {
 // @access  Public
 const registerEmployer = async (req, res) => {
   try {
-    const { firstName, lastName, email, mobile, password, companyName, businessEmail } = req.body;
+    const { firstName, lastName, email, mobile, password, companyName, businessEmail, address, city } = req.body;
 
     // 1. Validate required fields
     if (!firstName || !lastName || !email || !mobile || !password || !companyName) {
@@ -75,7 +75,9 @@ const registerEmployer = async (req, res) => {
       mobile: cleanedMobile,
       companyName: companyName.trim(),
       businessEmail: businessEmail ? businessEmail.trim().toLowerCase() : email.trim().toLowerCase(),
-      password: hashedPassword
+      password: hashedPassword,
+      address: address || '',
+      city: city || ''
     });
 
     // 6. Send success response
@@ -165,7 +167,7 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'Employer not found.' });
     }
 
-    const { companyName, industry, website, companySize, address, about, businessEmail, hrPhone, profileImage, password } = req.body;
+    const { companyName, industry, website, companySize, address, city, about, businessEmail, hrPhone, profileImage, password } = req.body;
 
     // Validate password if provided
     if (password) {
@@ -184,6 +186,7 @@ const updateProfile = async (req, res) => {
     if (website !== undefined) employer.website = website;
     if (companySize !== undefined) employer.companySize = companySize;
     if (address !== undefined) employer.address = address;
+    if (city !== undefined) employer.city = city;
     if (about !== undefined) employer.about = about;
     if (businessEmail !== undefined) employer.businessEmail = businessEmail;
     if (hrPhone !== undefined) employer.hrPhone = hrPhone;
