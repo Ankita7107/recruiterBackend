@@ -50,7 +50,7 @@ const postJob = async (req, res) => {
 
     const { 
       title, category, jobType, experienceLevel, 
-      location, salaryRange, deadline, description, skills,
+      location, salaryRange, salaryPeriod, deadline, description, skills,
       openings
     } = req.body;
 
@@ -66,6 +66,7 @@ const postJob = async (req, res) => {
       experienceLevel,
       location,
       salaryRange,
+      salaryPeriod: salaryPeriod || 'per annum',
       deadline,
       description,
       skills,
@@ -142,7 +143,7 @@ const updateJob = async (req, res) => {
 
     const { 
       title, category, jobType, experienceLevel, 
-      location, salaryRange, deadline, description, skills, status,
+      location, salaryRange, salaryPeriod, deadline, description, skills, status,
       openings
     } = req.body;
 
@@ -153,6 +154,7 @@ const updateJob = async (req, res) => {
     if (experienceLevel !== undefined) job.experienceLevel = experienceLevel;
     if (location !== undefined) job.location = location;
     if (salaryRange !== undefined) job.salaryRange = salaryRange;
+    if (salaryPeriod !== undefined) job.salaryPeriod = salaryPeriod;
     if (deadline !== undefined) job.deadline = deadline;
     if (description !== undefined) job.description = description;
     if (skills !== undefined) job.skills = skills;

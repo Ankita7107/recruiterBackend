@@ -30,6 +30,11 @@ const jobSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
+  salaryPeriod: {
+    type: String,
+    default: 'per annum',
+    trim: true
+  },
   deadline: {
     type: Date
   },
