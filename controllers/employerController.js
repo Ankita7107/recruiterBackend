@@ -73,6 +73,7 @@ const registerEmployer = async (req, res) => {
       lastName: lastName.trim(),
       email: email.trim().toLowerCase(),
       mobile: cleanedMobile,
+      hrPhone: cleanedMobile,
       companyName: companyName.trim(),
       businessEmail: businessEmail ? businessEmail.trim().toLowerCase() : email.trim().toLowerCase(),
       password: hashedPassword,
