@@ -15,7 +15,7 @@ const generateToken = (id, role) => {
 // @access  Public
 const registerJobSeeker = async (req, res) => {
   try {
-    const { firstName, lastName, email, mobile, password } = req.body;
+    const { firstName, lastName, email, mobile, password, city } = req.body;
 
     // 1. Validate required fields
     if (!firstName || !lastName || !email || !mobile || !password) {
@@ -65,7 +65,8 @@ const registerJobSeeker = async (req, res) => {
       lastName: lastName.trim(),
       email: email.trim().toLowerCase(),
       mobile: cleanedMobile,
-      password: hashedPassword
+      password: hashedPassword,
+      city: city || ''
     });
 
     // 6. Send success response
@@ -77,6 +78,7 @@ const registerJobSeeker = async (req, res) => {
           firstName: jobSeeker.firstName,
           lastName: jobSeeker.lastName,
           email: jobSeeker.email,
+          city: jobSeeker.city,
           role: 'jobseeker'
         }
       });
