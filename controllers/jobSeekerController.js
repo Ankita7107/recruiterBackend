@@ -153,7 +153,7 @@ const updateProfile = async (req, res) => {
       return res.status(404).json({ message: 'Job seeker not found.' });
     }
 
-    const { city, skills, experience, education, resumeLink, profileImage, mobile, password } = req.body;
+    const { city, skills, experience, education, projects, resumeLink, profileImage, mobile, password } = req.body;
 
     // Validate password if provided
     if (password) {
@@ -171,6 +171,7 @@ const updateProfile = async (req, res) => {
     if (skills !== undefined) jobSeeker.skills = skills;
     if (experience !== undefined) jobSeeker.experience = experience;
     if (education !== undefined) jobSeeker.education = education;
+    if (projects !== undefined) jobSeeker.projects = projects;
     if (resumeLink !== undefined) jobSeeker.resumeLink = resumeLink;
     if (profileImage !== undefined) jobSeeker.profileImage = profileImage;
     if (mobile !== undefined) jobSeeker.mobile = mobile;

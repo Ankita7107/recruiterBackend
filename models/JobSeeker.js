@@ -56,6 +56,17 @@ const jobSeekerSchema = new mongoose.Schema({
     ],
     default: []
   },
+  projects: {
+    type: [
+      {
+        name: String,
+        link: String,
+        techStack: String,
+        desc: String
+      }
+    ],
+    default: []
+  },
   resumeLink: {
     type: String,
     trim: true
