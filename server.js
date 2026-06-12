@@ -39,6 +39,9 @@ app.use('/api/jobs', jobRoutes);
 const applicationRoutes = require('./routes/applicationRoutes');
 app.use('/api/applications', applicationRoutes);
 
+const interviewRoutes = require('./routes/interviewRoutes');
+app.use('/api/interviews', interviewRoutes);
+
 const masterDataRoutes = require('./routes/masterDataRoutes');
 app.use('/api/master', masterDataRoutes);
 
