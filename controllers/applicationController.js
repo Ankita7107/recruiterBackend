@@ -168,7 +168,7 @@ const updateApplicationStatus = async (req, res) => {
     }
 
     const { status } = req.body;
-    const validStatuses = ['Applied', 'Under Review', 'Shortlisted', 'Interview', 'Rejected', 'Closed'];
+    const validStatuses = ['Applied', 'Under Review', 'Shortlisted', 'Interview', 'Selected', 'Rejected', 'Closed'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
     }
